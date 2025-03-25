@@ -127,3 +127,30 @@ export const updateOrderStatus = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const searchOrder = async (req, res) => {
+  try {
+    const { customerName, status } = req.query;
+    const filters = {};
+    if (customerName) {
+      filters.customerName = { $regex: customerName, $options: "i" };
+    }
+    if (status) {
+      filters.status = status;
+    }
+
+    const order = await Order.find(filters)
+      .populate("customer", "name email")
+      .populate("products.product", "name price")
+      .populate("createdBy", "name email");
+
+    res.status(200).json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Server Error", error: error.message });
+  }
+};
